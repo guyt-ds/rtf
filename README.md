@@ -55,4 +55,36 @@ From the information provided and Citi's Real-Time Funding (RTF) details, here's
 - **Timeliness:** Ensures funds are available precisely when needed, improving liquidity management.
 - **Flexibility:** Adjusts easily to business needs without requiring extensive manual work. 
 
-Let me know if you'd like a detailed diagram or pseudo-code illustrating this functionality!
+### **Examples:**
+
+### 1. **Transfer $10M from Account A to Account B at 9 PM EST daily**
+This is a **scheduled transfer** rule, implemented as follows:
+
+- **Trigger**: Time-based.
+- **Action**: Move a fixed amount ($10M) from one account (A) to another (B) at a specified time (9 PM EST).
+- **Implementation**:
+  1. A **cron job** or scheduler runs daily at 9 PM EST.
+  2. The system checks if Account A has sufficient funds.
+     - If **yes**, transfer $10M to Account B.
+     - If **no**, either:
+       - **Log an error** or send a notification to the treasury team.
+       - **Attempt partial fulfillment**, depending on client preferences.
+
+---
+
+### 2. **Ensure Account C maintains a minimum balance of $1M; transfer excess to Account D**
+This is a **balance-sweep rule**, implemented as follows:
+
+- **Trigger**: Threshold-based.
+- **Action**: Maintain a minimum balance of $1M in Account C and move any excess funds to Account D.
+- **Implementation**:
+  1. A **real-time monitor** checks Account C's balance continuously or periodically (e.g., every 15 minutes).
+  2. When the balance exceeds $1M:
+     - Calculate the **excess**: `Excess = Current Balance - $1M`.
+     - Transfer the **excess** to Account D.
+  3. If Account C falls below $1M, no transfer is initiated, but:
+     - A **notification** could be triggered to alert the treasury team.
+  4. All movements are logged in a ledger for tracking.
+
+---
+
