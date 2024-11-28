@@ -1,6 +1,60 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+struct Recurrence {
+    uint8[] daysOfWeek; // Array of weekdays (0 = Sunday, 6 = Saturday)
+    uint256 timeOfDay;  // Time of day in seconds since 00:00 (e.g., 20:00 = 72000 seconds)
+}
+
+struct ScheduledTransfer {
+    address from;
+    address to;
+    uint256 amount;
+    Recurrence recurrence;
+    uint256 nextExecutionTime; // Tracks when this transfer should next execute
+}
+
+function getNextExecutionTime(uint256 currentTimestamp, Recurrence memory recurrence) internal pure returns (uint256) {
+    uint256 nextTime = currentTimestamp;
+    uint8 dayOfWeek = uint8((nextTime / 1 days + 4) % 7); // Calculate day of the week
+
+    while (true) {
+        // If the day matches one of the recurrence days
+        for (uint8 i = 0; i < recurrence.daysOfWeek.length; i++) {
+            if (recurrence.daysOfWeek[i] == dayOfWeek) {
+                // Check if the time of day is valid
+                uint256 todayExecutionTime = (nextTime / 1 days) * 1 days + recurrence.timeOfDay;
+                if (todayExecutionTime > nextTime) {
+                    return todayExecutionTime; // Found the next execution time
+                }
+            }
+        }
+
+        // Move to the next day
+        nextTime += 1 days;
+        dayOfWeek = (dayOfWeek + 1) % 7;
+    }
+}
+
+function executeScheduledTransfers() external {
+    uint256 currentTime = block.timestamp;
+
+    for (uint256 i = 0; i < scheduledTransfers.length; i++) {
+        ScheduledTransfer storage transfer = scheduledTransfers[i];
+
+        if (currentTime >= transfer.nextExecutionTime) {
+            // Perform the transfer
+            token.transferFrom(transfer.from, transfer.to, transfer.amount);
+
+            // Calculate the next execution time
+            transfer.nextExecutionTime = getNextExecutionTime(currentTime, transfer.recurrence);
+        }
+    }
+}
+
+
+----
+
 interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
